@@ -26,7 +26,7 @@ void handle_dht(void * params){
         mqtt_envia_mensagem("v1/devices/me/telemetry", cJSON_Print(response));
       }
 
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 

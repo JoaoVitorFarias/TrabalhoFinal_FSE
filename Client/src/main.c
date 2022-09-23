@@ -35,6 +35,20 @@ void conectadoWifi(void * params)
   }
 }
 
+
+void mqtt_send_sleeping(int state){
+  cJSON* response= cJSON_CreateObject();
+  if (response == NULL){
+      ESP_LOGE("LOW POWER", "Erro ao criar o json");
+  }
+
+  cJSON_AddItemToObject(response, "bateria", cJSON_CreateNumber(state));
+
+  mqtt_envia_mensagem("v1/devices/me/attributes", cJSON_Print(response));
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+}
+
 void handle_low_power(){
 
   gpio_pad_select_gpio(BOTAO);
@@ -44,6 +58,8 @@ void handle_low_power(){
   gpio_wakeup_enable(BOTAO, GPIO_INTR_LOW_LEVEL);
   esp_sleep_enable_gpio_wakeup();
 
+  mqtt_send_sleeping(1);
+  
   ESP_LOGI("SYS", "SLEEPING");
   uart_tx_wait_idle(CONFIG_ESP_CONSOLE_UART_NUM);
   esp_light_sleep_start();
@@ -69,6 +85,7 @@ void app_main(void)
 
     if(xSemaphoreTake(conexaoMQTTSemaphore, portMAX_DELAY)){
       if(MODO_BATERIA == 0){
+        mqtt_send_sleeping(0);
         init_dht();
         init_detector();
         active_alarm();
